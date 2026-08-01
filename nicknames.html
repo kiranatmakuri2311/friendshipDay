@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Her Many Names — Gracy</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap');
+
+:root{
+  --cream:#FFF8F1;
+  --blush:#FFE1D6;
+  --blush-2:#FFD0C2;
+  --coral:#FF8674;
+  --deep-coral:#E85A4F;
+  --plum:#5B3256;
+  --plum-deep:#3E2038;
+  --gold:#F0B429;
+  --text-dark:#3E2436;
+  --text-soft:#7A5468;
+  --white:#FFFFFF;
+  --shadow: 0 18px 40px rgba(91,50,86,0.18);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+html{ scroll-behavior:smooth; }
+
+body{
+  font-family:'Quicksand', sans-serif;
+  color:var(--text-dark);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255,214,197,0.55), transparent 40%),
+    radial-gradient(circle at 88% 15%, rgba(240,180,41,0.18), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(255,134,116,0.15), transparent 55%),
+    linear-gradient(180deg, var(--cream) 0%, #FFF1E6 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* floating ambient hearts */
+.ambient-hearts{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.ambient-hearts span{
+  position:absolute; bottom:-40px; font-size:22px; color:var(--coral); opacity:0.35;
+  animation:floatUp linear infinite;
+}
+@keyframes floatUp{
+  0%{ transform:translateY(0) rotate(0deg); opacity:0; }
+  10%{ opacity:0.45; }
+  100%{ transform:translateY(-115vh) rotate(25deg); opacity:0; }
+}
+
+/* ---------- NAV ---------- */
+.lights{
+  width:100%; height:14px; overflow:hidden; position:relative; z-index:5;
+  background:transparent;
+}
+.lights::before{
+  content:"";
+  position:absolute; top:0; left:-2%; width:104%; height:2px;
+  background:repeating-linear-gradient(90deg, transparent 0 10px, rgba(91,50,86,0.25) 10px 11px);
+}
+.lights span{
+  position:absolute; top:2px; width:8px; height:8px; border-radius:50%;
+  background:var(--gold);
+  box-shadow:0 0 8px 3px rgba(240,180,41,0.65);
+  animation:twinkle 1.6s ease-in-out infinite;
+}
+@keyframes twinkle{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+nav{
+  position:sticky; top:0; z-index:20;
+  background:rgba(255,248,241,0.85);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(91,50,86,0.12);
+}
+.nav-inner{
+  max-width:1100px; margin:0 auto; padding:14px 24px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+}
+.brand{
+  font-family:'Dancing Script', cursive; font-weight:700; font-size:1.7rem;
+  color:var(--deep-coral); text-decoration:none;
+}
+.nav-links{ display:flex; gap:6px; flex-wrap:wrap; }
+.nav-links a{
+  text-decoration:none; color:var(--text-soft); font-weight:600; font-size:0.9rem;
+  padding:8px 14px; border-radius:999px; transition:all .25s ease;
+  letter-spacing:.02em;
+}
+.nav-links a:hover, .nav-links a.active{
+  background:var(--coral); color:var(--white);
+  box-shadow:0 6px 16px rgba(232,90,79,0.35);
+}
+
+/* ---------- LAYOUT ---------- */
+main{ position:relative; z-index:2; max-width:1100px; margin:0 auto; padding:50px 24px 90px; }
+
+.eyebrow{
+  font-family:'Caveat', cursive; font-size:1.4rem; color:var(--deep-coral);
+  display:inline-block; margin-bottom:6px; transform:rotate(-2deg);
+}
+h1{
+  font-family:'Dancing Script', cursive; font-weight:700;
+  font-size:clamp(2.6rem, 6vw, 5rem); color:var(--plum-deep); line-height:1.1;
+}
+h2.section-title{
+  font-family:'Playfair Display', serif; font-style:italic; font-weight:700;
+  font-size:clamp(1.7rem, 3.5vw, 2.4rem); color:var(--plum-deep); margin-bottom:8px;
+}
+p.lead{ font-size:1.1rem; color:var(--text-soft); max-width:640px; line-height:1.7; }
+
+.divider{
+  width:70px; height:3px; margin:18px 0 30px; border-radius:3px;
+  background:linear-gradient(90deg, var(--coral), var(--gold));
+}
+
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:'Quicksand', sans-serif; font-weight:700; font-size:0.95rem;
+  padding:14px 26px; border-radius:999px; text-decoration:none;
+  border:none; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease;
+}
+.btn-primary{ background:linear-gradient(135deg, var(--coral), var(--deep-coral)); color:var(--white); box-shadow:0 12px 26px rgba(232,90,79,0.4); }
+.btn-outline{ background:transparent; color:var(--plum); border:2px solid var(--plum); }
+.btn:hover{ transform:translateY(-3px); }
+
+/* ---------- HERO ---------- */
+.hero{ text-align:center; padding:30px 0 20px; }
+.hero .heart-icon{ font-size:2rem; animation:pulse 1.8s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.2);} }
+.hero-cta{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:30px; }
+
+.polaroid-strip{
+  display:flex; justify-content:center; gap:26px; margin-top:60px; flex-wrap:wrap;
+}
+.polaroid{
+  background:var(--white); padding:14px 14px 46px; width:170px; border-radius:4px;
+  box-shadow:var(--shadow); position:relative; transform:rotate(var(--r,-4deg));
+  transition:transform .3s ease;
+}
+.polaroid:hover{ transform:rotate(0deg) translateY(-8px) scale(1.04); z-index:5; }
+.polaroid:nth-child(1){ --r:-7deg; }
+.polaroid:nth-child(2){ --r:4deg; }
+.polaroid:nth-child(3){ --r:-2deg; }
+.polaroid:nth-child(4){ --r:6deg; }
+.polaroid-cap{
+  position:absolute; bottom:12px; left:0; right:0; text-align:center;
+  font-family:'Caveat', cursive; font-size:1.15rem; color:var(--text-soft);
+}
+.photo-placeholder{
+  width:100%; height:100%; aspect-ratio:1/1; border-radius:2px;
+  background:
+    linear-gradient(135deg, var(--blush) 0%, var(--blush-2) 50%, #ffe8dc 100%);
+  border:2px dashed rgba(232,90,79,0.45);
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  color:var(--deep-coral); font-size:0.72rem; font-weight:700; text-align:center; padding:8px;
+  gap:4px;
+}
+.photo-placeholder .icon{ font-size:1.6rem; }
+.photo-placeholder .path{
+  font-family:'Quicksand',sans-serif; font-weight:600; font-size:0.62rem; color:var(--text-soft);
+  background:rgba(255,255,255,0.7); padding:2px 6px; border-radius:6px; word-break:break-all;
+}
+
+/* img-slot: shows a real photo from /images if present, otherwise a labeled placeholder.
+   To add your photo: drop a file at the path shown (e.g. images/hero-1.jpg) -
+   nothing else needs to change, the real photo will replace the placeholder automatically. */
+.img-slot{ position:relative; width:100%; aspect-ratio:1/1; }
+.img-slot img{
+  width:100%; height:100%; object-fit:cover; border-radius:2px; display:block;
+}
+.img-slot .photo-placeholder{ position:absolute; inset:0; }
+.img-slot.round{ border-radius:50%; }
+.img-slot.round img{ border-radius:50%; }
+.img-slot.round .photo-placeholder{ border-radius:50%; }
+.img-slot.square{ border-radius:12px; }
+.img-slot.square img{ border-radius:12px; object-fit:contain; }
+.img-slot.square .photo-placeholder{ border-radius:12px; }
+.img-slot.portrait{ aspect-ratio:4/5; }
+
+/* ---------- CARDS / GRID ---------- */
+.grid{ display:grid; gap:26px; margin-top:10px; }
+.grid-2{ grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); }
+.grid-3{ grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); }
+
+.card{
+  background:rgba(255,255,255,0.75); border:1px solid rgba(91,50,86,0.08);
+  border-radius:18px; padding:22px; box-shadow:var(--shadow);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.card:hover{ transform:translateY(-6px); box-shadow:0 24px 50px rgba(91,50,86,0.22); }
+
+.nick-card{ text-align:center; padding:26px; }
+.nick-card .img-slot{ width:100%; max-width:220px; height:auto; margin:0 auto 16px; }
+.nick-card .photo-placeholder{ font-size:0.7rem; }
+.nick-name{
+  font-family:'Dancing Script', cursive; font-weight:700; font-size:1.6rem; color:var(--deep-coral);
+  text-transform:capitalize;
+}
+.nick-tagline{ font-size:0.88rem; color:var(--text-soft); margin-top:6px; line-height:1.5; }
+
+/* ---------- LETTER ---------- */
+.letter-wrap{
+  background:var(--white); border-radius:6px; box-shadow:var(--shadow);
+  padding:clamp(28px,6vw,64px); position:relative; margin-top:10px;
+  background-image: repeating-linear-gradient(#fff 0 34px, rgba(91,50,86,0.08) 34px 35px);
+  background-size:100% 35px;
+}
+.letter-wrap::before{
+  content:"💌"; position:absolute; top:-22px; right:30px; font-size:2.2rem;
+}
+.letter-wrap p{
+  font-family:'Caveat', cursive; font-size:1.5rem; line-height:1.9; color:var(--text-dark);
+  margin-bottom:6px;
+}
+.signature{
+  font-family:'Dancing Script', cursive; font-size:2.1rem; color:var(--deep-coral);
+  margin-top:22px; display:block;
+}
+
+/* ---------- QUOTES ---------- */
+.quote-card{
+  border-left:4px solid var(--coral); padding:18px 22px; background:rgba(255,255,255,0.6);
+  border-radius:0 14px 14px 0;
+}
+.quote-card q{
+  font-family:'Playfair Display', serif; font-style:italic; font-size:1.15rem; color:var(--plum-deep);
+}
+.quote-card .who{ display:block; margin-top:10px; font-family:'Caveat', cursive; font-size:1.2rem; color:var(--text-soft); }
+
+/* ---------- SURPRISE ---------- */
+.surprise-box{
+  text-align:center; padding:60px 20px; background:rgba(255,255,255,0.6);
+  border-radius:24px; box-shadow:var(--shadow); margin-top:10px;
+}
+#confetti{ position:fixed; inset:0; pointer-events:none; z-index:50; }
+
+/* ---------- FOOTER ---------- */
+footer{
+  text-align:center; padding:34px 20px; color:var(--text-soft); font-size:0.85rem;
+  position:relative; z-index:2;
+}
+footer .fh{ font-family:'Dancing Script', cursive; font-size:1.3rem; color:var(--deep-coral); }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:768px){
+  main{ padding:36px 18px 70px; }
+  section{ margin-top:60px !important; }
+  .hero{ padding:16px 0 10px; }
+  .hero-cta{ gap:12px; }
+  .btn{ padding:12px 20px; font-size:0.9rem; }
+  .polaroid-strip{ gap:18px; margin-top:44px; }
+  .polaroid{ width:140px; padding:10px 10px 36px; }
+  .letter-wrap p{ font-size:1.3rem; line-height:1.75; }
+  .surprise-box{ padding:44px 18px; }
+  .grid{ gap:18px; }
+}
+
+@media (max-width:640px){
+  .nav-inner{ padding:12px 16px; gap:8px; }
+  .nav-links{ justify-content:center; width:100%; gap:4px; }
+  .nav-links a{ padding:7px 11px; font-size:0.82rem; }
+  .brand{ font-size:1.5rem; }
+}
+
+@media (max-width:420px){
+  h1{ font-size:clamp(2.1rem, 9vw, 3rem); }
+  h2.section-title{ font-size:clamp(1.4rem, 6vw, 1.9rem); }
+  p.lead{ font-size:1rem; }
+  .polaroid{ width:44vw; max-width:150px; }
+  .letter-wrap{ padding:24px 18px; }
+  .letter-wrap p{ font-size:1.15rem; }
+  .signature{ font-size:1.7rem; }
+  .hero-cta{ flex-direction:column; align-items:stretch; }
+  .hero-cta .btn{ justify-content:center; }
+  .nick-card .img-slot{ max-width:170px; }
+}
+</style>
+</head>
+<body>
+<div class="ambient-hearts"></div>
+
+<div class="lights"></div>
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="brand">Gracy ✨</a>
+    <div class="nav-links"><a href="index.html">Home</a>
+<a href="memories.html">Our Memories</a>
+<a href="nicknames.html" class="active">Her Many Names</a>
+<a href="letter.html">My Letter</a>
+<a href="surprise.html">Open A Surprise</a>
+</div>
+  </div>
+</nav>
+
+<main>
+
+<span class="eyebrow">she has more names than a royal family</span>
+<h2 class="section-title" style="font-family:'Dancing Script',cursive; font-style:normal; font-size:clamp(2rem,5vw,3rem);">Her Many, Many Names</h2>
+<div class="divider"></div>
+<p class="lead">Somewhere along the way, "Gracy" turned into six different nicknames &mdash; each one from a different memory, a different mood, a different inside joke. Here's every version of you I love calling out to.</p>
+
+<div class="grid grid-3" style="margin-top:40px;">
+  
+    <div class="card nick-card">
+      <div class="img-slot square">
+      <img src="images/nickname-mowa.jpg" alt="kumbesh" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="photo-placeholder" style="display:none;">
+        <span class="icon">📷</span>
+        <span>kumbesh</span>
+        <span class="path">images/nickname-mowa.jpg</span>
+      </div>
+    </div>
+      <div class="nick-name">kumbesh</div>
+    </div>
+    
+    <div class="card nick-card">
+      <div class="img-slot square">
+      <img src="images/nickname-chitti.jpg" alt="chitti" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="photo-placeholder" style="display:none;">
+        <span class="icon">📷</span>
+        <span>chitti</span>
+        <span class="path">images/nickname-chitti.jpg</span>
+      </div>
+    </div>
+      <div class="nick-name">chitti</div>
+    </div>
+    
+    <div class="card nick-card">
+      <div class="img-slot square">
+      <img src="images/nickname-kumbuu.jpg" alt="kumbuu" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="photo-placeholder" style="display:none;">
+        <span class="icon">📷</span>
+        <span>kumbuu</span>
+        <span class="path">images/nickname-kumbuu.jpg</span>
+      </div>
+    </div>
+      <div class="nick-name">kumbuu</div>
+    </div>
+    
+    <div class="card nick-card">
+      <div class="img-slot square">
+      <img src="images/nickname-kumbesh.jpg" alt="mowa" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="photo-placeholder" style="display:none;">
+        <span class="icon">📷</span>
+        <span>mowa</span>
+        <span class="path">images/nickname-kumbesh.jpg</span>
+      </div>
+    </div>
+      <div class="nick-name">mowa</div>
+    </div>
+    
+    <div class="card nick-card">
+      <div class="img-slot square">
+      <img src="images/nickname-youth-icon.jpg" alt="youth icon" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="photo-placeholder" style="display:none;">
+        <span class="icon">📷</span>
+        <span>youth icon</span>
+        <span class="path">images/nickname-youth-icon.jpg</span>
+      </div>
+    </div>
+      <div class="nick-name">youth icon</div>
+    </div>
+    
+    <div class="card nick-card">
+      <div class="img-slot square">
+      <img src="images/nickname-queen-elizabeth.jpg" alt="queen elizabeth" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="photo-placeholder" style="display:none;">
+        <span class="icon">📷</span>
+        <span>queen elizabeth</span>
+        <span class="path">images/nickname-queen-elizabeth.jpg</span>
+      </div>
+    </div>
+      <div class="nick-name">queen elizabeth</div>
+    </div>
+    
+</div>
+
+<div style="text-align:center; margin-top:60px;">
+  <a href="letter.html" class="btn btn-primary">Next: Read My Letter 💌</a>
+</div>
+
+</main>
+<footer>
+  <span class="fh">Happy Friendship Day, Gracy 💛</span><br>
+  made with a whole lot of heart, just for you.
+</footer>
+<script>
+(function(){
+  const wrap = document.querySelector('.ambient-hearts');
+  if(!wrap) return;
+  const glyphs = ['💗','💛','✨','💕'];
+  for(let i=0;i<16;i++){
+    const s = document.createElement('span');
+    s.textContent = glyphs[i % glyphs.length];
+    s.style.left = Math.random()*100 + 'vw';
+    s.style.animationDuration = (10 + Math.random()*10) + 's';
+    s.style.animationDelay = (Math.random()*10) + 's';
+    s.style.fontSize = (14 + Math.random()*16) + 'px';
+    wrap.appendChild(s);
+  }
+})();
+</script>
+<script>
+(function(){
+  const bar = document.querySelector('.lights');
+  if(!bar) return;
+  const w = bar.getBoundingClientRect().width || 1100;
+  const count = Math.floor(w/26);
+  for(let i=0;i<count;i++){
+    const b = document.createElement('span');
+    b.style.left = (i*26+6) + 'px';
+    b.style.animationDelay = (Math.random()*1.6) + 's';
+    b.style.background = i % 3 === 0 ? 'var(--coral)' : (i % 3 === 1 ? 'var(--gold)' : 'var(--plum)');
+    bar.appendChild(b);
+  }
+})();
+</script>
+
+</body>
+</html>
