@@ -275,6 +275,81 @@ footer{
 }
 footer .fh{ font-family:'Dancing Script', cursive; font-size:1.3rem; color:var(--deep-coral); }
 
+/* ---------- FLOATING NOTE BUTTON ---------- */
+.floating-note-btn{
+  position:fixed; bottom:26px; right:26px; width:60px; height:60px;
+  border-radius:50%; border:none; cursor:pointer;
+  background:linear-gradient(135deg, var(--coral), var(--deep-coral));
+  color:var(--white); font-size:1.6rem;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 12px 30px rgba(232,90,79,0.45);
+  z-index:60; animation:fabBob 3s ease-in-out infinite;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.floating-note-btn::after{
+  content:""; position:absolute; inset:-6px; border-radius:50%;
+  border:2px solid var(--coral); opacity:0.55;
+  animation:fabRing 2.4s ease-out infinite;
+}
+.floating-note-btn:hover{
+  animation-play-state:paused; transform:translateY(-4px) scale(1.07);
+  box-shadow:0 16px 36px rgba(232,90,79,0.6);
+}
+@keyframes fabBob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+@keyframes fabRing{ 0%{ transform:scale(0.85); opacity:0.6; } 100%{ transform:scale(1.4); opacity:0; } }
+
+.modal-overlay{
+  position:fixed; inset:0; z-index:100; padding:20px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(62,32,56,0.45); backdrop-filter:blur(4px);
+  opacity:0; pointer-events:none; transition:opacity .3s ease;
+}
+.modal-overlay.active{ opacity:1; pointer-events:auto; }
+.modal-card{
+  width:100%; max-width:440px; background:var(--white); border-radius:20px;
+  padding:30px 28px 24px; box-shadow:var(--shadow); position:relative;
+  transform:translateY(20px) scale(0.96); transition:transform .3s ease;
+}
+.modal-overlay.active .modal-card{ transform:translateY(0) scale(1); }
+.modal-close{
+  position:absolute; top:12px; right:14px; width:32px; height:32px;
+  border:none; border-radius:50%; background:transparent; cursor:pointer;
+  font-size:1.15rem; color:var(--text-soft); transition:background .2s ease, color .2s ease;
+}
+.modal-close:hover{ background:var(--blush); color:var(--deep-coral); }
+.modal-icon{ font-size:2.1rem; text-align:center; }
+.modal-title{
+  font-family:'Dancing Script', cursive; font-weight:700; font-size:1.7rem;
+  color:var(--plum-deep); text-align:center; margin-top:4px;
+}
+.modal-sub{
+  font-family:'Caveat', cursive; font-size:1.15rem; color:var(--deep-coral);
+  text-align:center; margin-top:2px; margin-bottom:18px;
+}
+.form-field{ margin-bottom:14px; }
+.form-field label{
+  display:block; font-weight:700; font-size:0.78rem; letter-spacing:.02em;
+  color:var(--text-soft); margin-bottom:6px; text-transform:uppercase;
+}
+.form-field input, .form-field textarea{
+  width:100%; border:2px solid var(--blush); border-radius:12px; padding:10px 14px;
+  font-family:'Quicksand', sans-serif; font-size:0.95rem; color:var(--text-dark);
+  background:var(--cream); transition:border-color .2s ease; resize:vertical;
+}
+.form-field textarea{ min-height:110px; line-height:1.5; }
+.form-field input:focus, .form-field textarea:focus{ outline:none; border-color:var(--coral); }
+.modal-actions{ display:flex; gap:10px; margin-top:4px; }
+.modal-actions .btn{ flex:1; justify-content:center; padding:12px 18px; font-size:0.9rem; }
+.modal-hint{ font-size:0.74rem; color:var(--text-soft); text-align:center; margin-top:14px; opacity:0.85; }
+.modal-status{
+  display:none; font-size:0.85rem; font-weight:700; text-align:center;
+  margin:2px 0 14px; padding:9px 12px; border-radius:10px;
+}
+.modal-status.show{ display:block; }
+.modal-status.sending{ color:var(--text-soft); background:var(--cream); }
+.modal-status.success{ color:var(--plum-deep); background:rgba(240,180,41,0.22); }
+.modal-status.error{ color:var(--deep-coral); background:rgba(232,90,79,0.12); }
+
 /* ---------- RESPONSIVE ---------- */
 @media (max-width:768px){
   main{ padding:36px 18px 70px; }
@@ -317,6 +392,8 @@ footer .fh{ font-family:'Dancing Script', cursive; font-size:1.3rem; color:var(-
   .cd-unit span{ font-size:1.25rem; }
   .cd-unit small{ font-size:0.58rem; }
   .cd-sep{ font-size:1.2rem; }
+  .floating-note-btn{ width:52px; height:52px; font-size:1.4rem; bottom:18px; right:18px; }
+  .modal-card{ padding:26px 20px 20px; }
 }
 </style>
 </head>
@@ -391,6 +468,33 @@ footer .fh{ font-family:'Dancing Script', cursive; font-size:1.3rem; color:var(-
   <span class="fh">Happy Friendship Day, Gracy 💛</span><br>
   made with a whole lot of heart, just for you.
 </footer>
+
+<button class="floating-note-btn" id="noteFab" onclick="openNoteModal()" aria-haspopup="dialog" aria-controls="noteModalOverlay" title="Send me a note" aria-label="Send me a note">💌</button>
+
+<div class="modal-overlay" id="noteModalOverlay" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle" onclick="if(event.target===this) closeNoteModal()">
+  <div class="modal-card">
+    <button type="button" class="modal-close" onclick="closeNoteModal()" aria-label="Close">✕</button>
+    <div class="modal-icon">💌</div>
+    <div class="modal-title" id="noteModalTitle">Send Me A Little Note</div>
+    <div class="modal-sub">whatever's on your mind, Gracy ✨</div>
+    <form id="noteForm" onsubmit="sendNote(event)">
+      <div class="form-field">
+        <label for="noteName">Your name</label>
+        <input type="text" id="noteName" placeholder="Gracy" value="Gracy" autocomplete="name">
+      </div>
+      <div class="form-field">
+        <label for="noteMessage">Your message</label>
+        <textarea id="noteMessage" placeholder="Type your message here..." required></textarea>
+      </div>
+      <p class="modal-status" id="noteStatus"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="noteSubmitBtn">Send 💌</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 (function(){
   const wrap = document.querySelector('.ambient-hearts');
@@ -497,6 +601,73 @@ window.addEventListener('resize', ()=>{
   const canvas = document.getElementById('confetti');
   if(canvas){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 });
+</script>
+
+<script>
+const WEB3FORMS_ACCESS_KEY = '3f531e85-fa7d-444d-b772-8d0f3ae641b7';
+const NOTE_REPLY_TO = 'imkiran516@gmail.com';
+
+function openNoteModal(){
+  const overlay = document.getElementById('noteModalOverlay');
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  setStatus('', '');
+  setTimeout(() => document.getElementById('noteMessage').focus(), 250);
+}
+
+function closeNoteModal(){
+  document.getElementById('noteModalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeNoteModal();
+});
+
+function setStatus(text, kind){
+  const statusEl = document.getElementById('noteStatus');
+  statusEl.textContent = text;
+  statusEl.className = text ? `modal-status show ${kind}` : 'modal-status';
+}
+
+async function sendNote(e){
+  e.preventDefault();
+  const name = document.getElementById('noteName').value.trim();
+  const message = document.getElementById('noteMessage').value.trim();
+  if(!message) return;
+
+  const submitBtn = document.getElementById('noteSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending...';
+  setStatus('Sending your note…', 'sending');
+
+  try{
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_ACCESS_KEY,
+        subject: name ? `A little note from ${name} 💌` : 'A little note for you 💌',
+        name: name || 'Someone special',
+        message: message,
+        replyto: NOTE_REPLY_TO
+      })
+    });
+    const data = await res.json();
+    if(data.success){
+      setStatus('Sent! 💌 Thank you.', 'success');
+      document.getElementById('noteForm').reset();
+      setTimeout(closeNoteModal, 1800);
+    } else {
+      throw new Error(data.message || 'Something went wrong');
+    }
+  } catch(err){
+    setStatus("Couldn't send — please try again in a moment.", 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send 💌';
+  }
+}
 </script>
 
 </body>
