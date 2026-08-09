@@ -316,6 +316,23 @@ footer .fh{ font-family:'Dancing Script', cursive; font-size:1.3rem; color:var(-
 .modal-status.success{ color:var(--plum-deep); background:rgba(240,180,41,0.22); }
 .modal-status.error{ color:var(--deep-coral); background:rgba(232,90,79,0.12); }
 
+/* ---------- VIDEO RECORD MODAL ---------- */
+.record-video-wrap{
+  position:relative; width:100%; aspect-ratio:4/3; border-radius:14px;
+  overflow:hidden; background:#000; margin-bottom:14px;
+}
+.record-video-wrap video{ width:100%; height:100%; object-fit:cover; display:block; }
+.record-indicator{
+  position:absolute; top:10px; left:10px; display:flex; align-items:center; gap:6px;
+  background:rgba(0,0,0,0.55); color:#fff; padding:4px 10px; border-radius:999px;
+  font-size:0.78rem; font-weight:700; letter-spacing:.02em;
+}
+.record-dot{ width:9px; height:9px; border-radius:50%; background:#ff3b30; animation:recPulse 1s ease-in-out infinite; }
+@keyframes recPulse{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+.record-actions{ flex-wrap:wrap; }
+.record-actions .btn{ flex:1 1 120px; }
+#recordFab{ background:linear-gradient(135deg, var(--plum), var(--plum-deep)); bottom:96px; }
+
 /* ---------- RESPONSIVE ---------- */
 @media (max-width:768px){
   main{ padding:36px 18px 70px; }
@@ -349,6 +366,7 @@ footer .fh{ font-family:'Dancing Script', cursive; font-size:1.3rem; color:var(-
   .hero-cta .btn{ justify-content:center; }
   .nick-card .img-slot{ width:90px; height:90px; }
   .floating-note-btn{ width:52px; height:52px; font-size:1.4rem; bottom:18px; right:18px; }
+  #recordFab{ bottom:80px; }
   .modal-card{ padding:26px 20px 20px; }
 }
 </style>
@@ -514,6 +532,52 @@ footer .fh{ font-family:'Dancing Script', cursive; font-size:1.3rem; color:var(-
   </div>
 </div>
 
+<button class="floating-note-btn" id="recordFab" onclick="openRecordModal()" aria-haspopup="dialog" aria-controls="recordModalOverlay" title="Record a video hello" aria-label="Record a video hello">🎥</button>
+
+<div class="modal-overlay" id="recordModalOverlay" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle" onclick="if(event.target===this) closeRecordModal()">
+  <div class="modal-card">
+    <button type="button" class="modal-close" onclick="closeRecordModal()" aria-label="Close">✕</button>
+    <div class="modal-icon">🎥</div>
+    <div class="modal-title" id="recordModalTitle">Record A Video Hello</div>
+
+    <p class="modal-status" id="recordStatus"></p>
+
+    <div id="recordStartStage">
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeRecordModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="startCamera()">Allow Camera &amp; Mic</button>
+      </div>
+    </div>
+
+    <div id="recordLiveStage" style="display:none;">
+      <div class="record-video-wrap">
+        <video id="recordLiveVideo" autoplay playsinline muted></video>
+        <div class="record-indicator" id="recordDot" style="display:none;">
+          <span class="record-dot"></span> REC <span id="recordTimer">0:00</span>
+        </div>
+      </div>
+      <div class="modal-actions record-actions">
+        <button type="button" class="btn btn-outline" onclick="closeRecordModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="recordBeginBtn" onclick="beginRecording()">⏺ Record</button>
+        <button type="button" class="btn btn-primary" id="recordStopBtn" style="display:none;" onclick="stopRecording()">⏹ Stop</button>
+      </div>
+    </div>
+
+    <div id="recordPreviewStage" style="display:none;">
+      <div class="record-video-wrap">
+        <video id="recordPreviewVideo" controls playsinline></video>
+      </div>
+      <div class="modal-actions record-actions">
+        <button type="button" class="btn btn-outline" onclick="reRecord()">↺ Re-record</button>
+        <button type="button" class="btn btn-outline" onclick="downloadRecording()">⬇ Download</button>
+        <button type="button" class="btn btn-primary" id="recordSendBtn" onclick="sendRecording()">Send Video 💌</button>
+      </div>
+    </div>
+
+    <p class="modal-hint">Record as long as you like — press Stop whenever you're done.</p>
+  </div>
+</div>
+
 <script>
 (function(){
   const wrap = document.querySelector('.ambient-hearts');
@@ -609,6 +673,226 @@ async function sendNote(e){
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Send 💌';
+  }
+}
+</script>
+
+<script>
+// ---- Video hello: permission -> live preview -> explicit record -> preview playback -> explicit send.
+// Nothing is captured or sent without the corresponding button press at each step.
+const RECORD_SAFE_BYTES = 25 * 1024 * 1024; // soft guard — heads-up above this, upload still attempted
+
+// Free, unsigned Cloudinary upload — safe to expose client-side (no secret key involved,
+// the preset itself restricts what can be uploaded). Web3Forms' free plan can't attach
+// files, so we upload the clip here and email a link to it instead.
+const CLOUDINARY_CLOUD_NAME = 'l4zmjmct';
+const CLOUDINARY_UPLOAD_PRESET = 'friendshipDay';
+
+let recStream = null;
+let recorder = null;
+let recChunks = [];
+let recBlob = null;
+let recTimerInterval = null;
+
+function openRecordModal(){
+  document.getElementById('recordModalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  resetRecordUI();
+}
+
+function closeRecordModal(){
+  document.getElementById('recordModalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  stopRecordStream();
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeRecordModal();
+});
+window.addEventListener('beforeunload', stopRecordStream);
+
+function resetRecordUI(){
+  stopRecordStream();
+  recBlob = null;
+  recChunks = [];
+  document.getElementById('recordStartStage').style.display = '';
+  document.getElementById('recordLiveStage').style.display = 'none';
+  document.getElementById('recordPreviewStage').style.display = 'none';
+  document.getElementById('recordBeginBtn').style.display = '';
+  document.getElementById('recordStopBtn').style.display = 'none';
+  document.getElementById('recordDot').style.display = 'none';
+  setRecordStatus('', '');
+}
+
+function stopRecordStream(){
+  if(recorder && recorder.state !== 'inactive'){
+    try{ recorder.stop(); }catch(e){}
+  }
+  if(recStream){
+    recStream.getTracks().forEach(t => t.stop()); // releases the camera/mic indicator immediately
+    recStream = null;
+  }
+  clearInterval(recTimerInterval);
+  const liveVideo = document.getElementById('recordLiveVideo');
+  if(liveVideo) liveVideo.srcObject = null;
+}
+
+function setRecordStatus(text, kind){
+  const el = document.getElementById('recordStatus');
+  el.textContent = text;
+  el.className = text ? `modal-status show ${kind}` : 'modal-status';
+}
+
+// Step 1: explicit "Allow Camera & Mic" click triggers the browser's own permission prompt.
+async function startCamera(){
+  setRecordStatus('', '');
+  try{
+    recStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 320, height: 240 },
+      audio: true
+    });
+  } catch(err){
+    setRecordStatus("Camera/mic access wasn't granted, so nothing can be recorded.", 'error');
+    return;
+  }
+  document.getElementById('recordStartStage').style.display = 'none';
+  document.getElementById('recordLiveStage').style.display = '';
+  const liveVideo = document.getElementById('recordLiveVideo');
+  liveVideo.srcObject = recStream;
+  liveVideo.play().catch(()=>{});
+}
+
+// Step 2: explicit "Record" click starts capture (visible REC indicator + timer).
+function beginRecording(){
+  if(!recStream) return;
+  recChunks = [];
+  let mimeType = '';
+  const candidates = ['video/webm;codecs=vp8,opus', 'video/webm'];
+  for(const c of candidates){
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)){ mimeType = c; break; }
+  }
+  try{
+    recorder = mimeType ? new MediaRecorder(recStream, { mimeType }) : new MediaRecorder(recStream);
+  } catch(err){
+    setRecordStatus("This browser can't record video.", 'error');
+    return;
+  }
+  recorder.ondataavailable = e => { if(e.data && e.data.size) recChunks.push(e.data); };
+  recorder.onstop = handleRecordingStopped;
+  recorder.start();
+
+  document.getElementById('recordBeginBtn').style.display = 'none';
+  document.getElementById('recordStopBtn').style.display = '';
+  document.getElementById('recordDot').style.display = 'flex';
+
+  let elapsed = 0;
+  const timerLabel = document.getElementById('recordTimer');
+  timerLabel.textContent = '0:00';
+  recTimerInterval = setInterval(() => {
+    elapsed += 1;
+    const s = String(elapsed % 60).padStart(2, '0');
+    const m = Math.floor(elapsed / 60);
+    timerLabel.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function stopRecording(){
+  clearInterval(recTimerInterval);
+  if(recorder && recorder.state !== 'inactive') recorder.stop();
+}
+
+// Step 3: capture ends -> full playback shown before anything can be sent.
+function handleRecordingStopped(){
+  recBlob = new Blob(recChunks, { type: (recorder && recorder.mimeType) || 'video/webm' });
+  if(recStream){ recStream.getTracks().forEach(t => t.stop()); recStream = null; }
+
+  document.getElementById('recordLiveStage').style.display = 'none';
+  document.getElementById('recordPreviewStage').style.display = '';
+  const previewVideo = document.getElementById('recordPreviewVideo');
+  previewVideo.src = URL.createObjectURL(recBlob);
+
+  const sizeKB = Math.round(recBlob.size / 1024);
+  if(recBlob.size > RECORD_SAFE_BYTES){
+    setRecordStatus(`This clip is ${(sizeKB/1024).toFixed(1)}MB — upload may take a little longer than usual.`, 'sending');
+  } else {
+    setRecordStatus('', '');
+  }
+}
+
+function reRecord(){
+  document.getElementById('recordPreviewStage').style.display = 'none';
+  document.getElementById('recordStartStage').style.display = '';
+  document.getElementById('recordBeginBtn').style.display = '';
+  document.getElementById('recordStopBtn').style.display = 'none';
+  document.getElementById('recordDot').style.display = 'none';
+  recBlob = null;
+  setRecordStatus('', '');
+}
+
+function downloadRecording(){
+  if(!recBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(recBlob);
+  a.download = `friendship-day-video-hello.webm`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// Step 4: only this explicit "Send Video" click transmits anything.
+// Two calls happen here, both only on this click: (a) upload the clip to your
+// Cloudinary account, (b) email you a link to it via the existing free Web3Forms setup.
+async function sendRecording(){
+  if(!recBlob) return;
+  const sendBtn = document.getElementById('recordSendBtn');
+  sendBtn.disabled = true;
+  setRecordStatus('', '');
+
+  try{
+    sendBtn.textContent = 'Uploading...';
+    setRecordStatus('Uploading your video…', 'sending');
+
+    const uploadForm = new FormData();
+    uploadForm.append('file', recBlob, 'friendship-day-video-hello.webm');
+    uploadForm.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+    const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, {
+      method: 'POST',
+      body: uploadForm
+    });
+    const uploadData = await uploadRes.json();
+    if(!uploadRes.ok || !uploadData.secure_url){
+      throw new Error((uploadData.error && uploadData.error.message) || `Upload failed (HTTP ${uploadRes.status})`);
+    }
+    const videoUrl = uploadData.secure_url;
+
+    sendBtn.textContent = 'Sending...';
+    setRecordStatus('Uploaded — sending the link…', 'sending');
+
+    const emailRes = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_ACCESS_KEY,
+        subject: 'A video hello from Gracy 💌',
+        name: 'Gracy',
+        message: `A short video message was recorded on the Friendship Day page.\n\nWatch it here: ${videoUrl}`,
+        replyto: NOTE_REPLY_TO
+      })
+    });
+    const emailData = await emailRes.json();
+    if(!(emailRes.ok && emailData.success)){
+      throw new Error(emailData.message || `Email request failed (HTTP ${emailRes.status})`);
+    }
+
+    setRecordStatus('Sent! 💌 Thank you.', 'success');
+    setTimeout(closeRecordModal, 1800);
+  } catch(err){
+    console.error('Video send failed:', err);
+    setRecordStatus(`Couldn't send: ${err.message} — you can download the clip instead.`, 'error');
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send Video 💌';
   }
 }
 </script>
